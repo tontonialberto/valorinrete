@@ -1,0 +1,1 @@
+Gentile referente COL/Istituto, controlla la tua mail per confermare la registrazione.
