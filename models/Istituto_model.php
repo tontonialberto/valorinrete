@@ -64,10 +64,11 @@ class Istituto_model extends CI_Model {
         $query = $this->db->select('*')
             ->from('tab_candidature')
             ->join('tab_progetti', 'tab_progetti.id = tab_candidature.id_progetto')
-            ->join('tab_istituti', 'tab_istituti.id = tab_candidature.id_istituto')
-            ->where(array('tab_istituti.cod_meccanografico' => $istituto['cod_meccanografico']))
+            ->join('tab_istituti', 'tab_istituti.cod_meccanografico = tab_candidature.id_istituto')
+            ->where(array('tab_istituti.cod_meccanografico' => $istituto[0]->cod_meccanografico))
             ->get();
         
+        var_dump($query->num_rows());
         if(!$query->num_rows()) return FALSE;
         return $query->result_array();
     }
@@ -186,7 +187,7 @@ class Istituto_model extends CI_Model {
             ->where(array('cod_meccanografico' => $cod_meccanografico))
             ->get();
 
-        return $query->result_array();
+        return $query->result_array()[0];
     }
 
     /* 11. set_random_password() */

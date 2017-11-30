@@ -41,7 +41,7 @@
                                     
                                     <label class="form-label">Agenda disponibilità primo incontro:</label>
                                     <div class="incontro">
-                                        <div class="input-group date" data-provide="datepicker">
+                                        <div class="input-group date form-field datepicker" data-provide="datepicker">
                                             <input type="text" class="form-control" name="gc_data_incontro[]" />
                                             <div class="input-group-addon">
                                                 <span class="glyphicon glyphicon-th"></span>
@@ -210,6 +210,8 @@
             $(this).next('.display-item').hide();
         });
 
+        // Applica il formato Giorno/Mese/Anno
+        // a tutti gli input datepicker nella pagina
         $('.datepicker').datepicker({ 
             format: 'dd/mm/yyyy', 
             autoclose: true 

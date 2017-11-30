@@ -36,6 +36,7 @@ class Istituto extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('istituto_model');
+        $this->load->library('debug');
     }
 
     
@@ -53,11 +54,14 @@ class Istituto extends CI_Controller {
 
         // L'array $data viene passato alle views per poter visualizzare
         // alcuni dati in modo dinamico.
-        $data['title'] = 'Home';
+        $data['title'] = 'Pannello di Controllo';
+        $data['user'] = $this->session->istituto;
 
-        $this->load->view('header', $data);
+        $this->load->view('menu', $data);
         $this->load->view('istituto/index', $data);
         $this->load->view('footer');
+
+        $this->debug->print_session();
     }
 
     /* 3. login() */
@@ -86,7 +90,7 @@ class Istituto extends CI_Controller {
     {
         $this->load->helper('url');
         
-        $istituto = $this->istituto_model->login($this->input->post('email_referente'), $this->input->post('password'));
+        $istituto = $this->istituto_model->login($this->input->post('email'), $this->input->post('password'));
         
         // Se il login fallisce..
         if($istituto === FALSE)
@@ -225,7 +229,8 @@ class Istituto extends CI_Controller {
                     'cognome_referente' => $this->input->post('gc_cognome_referente'),
                     'telefono_referente' => $this->input->post('gc_telefono_referente'),
                     'email_referente' => $this->input->post('gc_email_referente'),
-                    'id_progetto' => 1 // id del progetto di riferimento(nel database)
+                    'id_progetto' => 1, // id del progetto di riferimento(nel database)
+                    'id_istituto' => $this->session->dati_istituto['cod_meccanografico']
                 );
             }
             if($this->input->post('rg'))
@@ -238,7 +243,8 @@ class Istituto extends CI_Controller {
                     'impianti_gioco_disponibili' => $this->input->post('rg_impianti_gioco_disponibili'),
                     'societa_affiliate' => $this->input->post('rg_istituto_convenzionato'),
                     'iscrizione_categoria_cadette' => $this->input->post('rg_iscrizione_categoria_cadette'),
-                    'id_progetto' => 3 // id del progetto di riferimento(nel database)
+                    'id_progetto' => 3, // id del progetto di riferimento(nel database)
+                    'id_istituto' => $this->session->dati_istituto['cod_meccanografico']
                 );
             }
             if($this->input->post('col'))
@@ -248,7 +254,8 @@ class Istituto extends CI_Controller {
                     'cognome_referente' => $this->input->post('col_cognome_referente'),
                     'telefono_referente' => $this->input->post('col_telefono_referente'),
                     'email_referente' => $this->input->post('col_email_referente'),
-                    'id_progetto' => 2 // id del progetto di riferimento(nel database)
+                    'id_progetto' => 2, // id del progetto di riferimento(nel database)
+                    'id_istituto' => $this->session->dati_istituto['cod_meccanografico']
                 );
             }
             if($this->input->post('cs'))
@@ -258,7 +265,8 @@ class Istituto extends CI_Controller {
                     'cognome_referente' => $this->input->post('cs_cognome_referente'),
                     'telefono_referente' => $this->input->post('cs_telefono_referente'),
                     'email_referente' => $this->input->post('cs_email_referente'),
-                    'id_progetto' => 4 // id del progetto di riferimento(nel database)
+                    'id_progetto' => 4, // id del progetto di riferimento(nel database)
+                    'id_istituto' => $this->session->dati_istituto['cod_meccanografico']
                 );
             }
 
@@ -282,6 +290,7 @@ class Istituto extends CI_Controller {
     public function subscribe()
     {
         $this->load->library('session');
+        $this->load->library('date');
         $this->load->database();
 
         // Consente di accedere al pannello di iscrizione studenti
@@ -302,13 +311,12 @@ class Istituto extends CI_Controller {
             // hanno completato lo step 3(Registrazione Studenti e Classi)
             
             // Inserimento Istituto
-            $_SESSION['dati_istituto']['grado_istituto'] = $this->input->post('grado_istituto');
+            $this->session->dati_istituto['grado_istituto'] = $this->input->post('grado_istituto');
             $this->create_istituto($this->session->dati_istituto);
             
             if($this->session->dati_gc)
             {
                 // Inserimento candidatura GiocoCalciando
-                $this->session->dati_gc['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_gc);
 
                 // Inserimento date incontri GiocoCalciando
@@ -316,7 +324,7 @@ class Istituto extends CI_Controller {
                 {
                     // Formatta la data secondo il formato DATE di MySQL
                     $data_incontro = $this->input->post('gc_data_incontro[]')[$i];
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $data_incontro));
+                    $data_incontro = $this->date->date_to_mysql($data_incontro);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -326,14 +334,13 @@ class Istituto extends CI_Controller {
             if($this->session->dati_rg)
             {
                 // Inserimento candidatura Ragazze in Gioco
-                $this->session->dati_rg['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_rg);
 
                 // Inserimento date incontri GiocoCalciando
                 for($i=0; $i<sizeof($this->input->post('rg_data_incontro[]')); $i++)
                 {
                     // Formatta la data secondo il formato DATE di MySQL
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $this->input->post('rg_data_incontro[]')[$i]));
+                    $data_incontro = $this->date->date_to_mysql($data_incontro);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -343,14 +350,13 @@ class Istituto extends CI_Controller {
             if($this->session->dati_col)
             {
                 // Inserimento candidatura Il Calcio e le Ore di Lezione
-                $this->session->dati_col['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_col);
 
                 // Inserimento date incontri GiocoCalciando
                 for($i=0; $i<sizeof($this->input->post('col_data_incontro[]')); $i++)
                 {
                     // Formatta la data secondo il formato DATE di MySQL
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $this->input->post('col_data_incontro[]')[$i]));
+                    $data_incontro = $this->date->date_to_mysql($data_incontro);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -360,7 +366,6 @@ class Istituto extends CI_Controller {
             if($this->session->dati_cs)
             {
                 // Inserimento candidatura Campionati Studenteschi
-                $this->session->dati_cs['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_cs);
             }
             
@@ -374,6 +379,11 @@ class Istituto extends CI_Controller {
             $this->load->view('header', $data);
             $this->load->view('sign_up_success', $data);
             $this->load->view('footer');
+
+            // Esce dalla funzione per evitare
+            // che venga mostrata la pagina
+            // di registrazione delle classi/studenti
+            return;
             
         }
         else if($this->form_validation_subscribe() === FALSE)
@@ -401,7 +411,6 @@ class Istituto extends CI_Controller {
             if($this->session->dati_gc)
             {
                 // Inserimento candidatura GiocoCalciando
-                $this->session->dati_gc['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_gc);
 
                 // Inserimento date incontri GiocoCalciando
@@ -409,7 +418,7 @@ class Istituto extends CI_Controller {
                 {
                     // Formatta la data secondo il formato DATE di MySQL
                     $data_incontro = $this->input->post('gc_data_incontro[]')[$i];
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $data_incontro));
+                    $data_incontro = $this->date->date_to_mysql($data_incontro);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -423,7 +432,7 @@ class Istituto extends CI_Controller {
                     // Mappa tutti gli studenti per poterli inserire nel db.
                     $studenti[$i]['nome'] = $this->input->post('gc_nome_studente[]')[$i];
                     $studenti[$i]['cognome'] = $this->input->post('gc_cognome_studente[]')[$i];
-                    $studenti[$i]['data_nascita'] = $this->input->post('gc_data_nascita[]')[$i];
+                    $studenti[$i]['data_nascita'] = $this->date->date_to_mysql($this->input->post('gc_data_nascita[]')[$i]);
                     $studenti[$i]['sesso'] = $this->input->post('gc_sesso_studente[]')[$i];
                     $studenti[$i]['classe'] = $this->input->post('gc_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('gc_sezione[]')[$i];
@@ -443,14 +452,14 @@ class Istituto extends CI_Controller {
             if($this->session->dati_rg)
             {
                 // Inserimento candidatura Ragazze in Gioco
-                $this->session->dati_rg['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_rg);
 
                 // Inserimento date incontri GiocoCalciando
                 for($i=0; $i<sizeof($this->input->post('rg_data_incontro[]')); $i++)
                 {
                     // Formatta la data secondo il formato DATE di MySQL
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $this->input->post('rg_data_incontro[]')[$i]));
+                    $data_incontro = $this->input->post('rg_data_incontro[]')[$i];
+                    $data_incontro = $this->date->date_to_mysql($data_incontro);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -464,7 +473,7 @@ class Istituto extends CI_Controller {
                     // Mappa tutti gli studenti per poterli inserire nel db.
                     $studenti[$i]['nome'] = $this->input->post('rg_nome_studente[]')[$i];
                     $studenti[$i]['cognome'] = $this->input->post('rg_cognome_studente[]')[$i];
-                    $studenti[$i]['data_nascita'] = $this->input->post('rg_data_nascita[]')[$i];
+                    $studenti[$i]['data_nascita'] = $this->date->date_to_mysql($this->input->post('rg_data_nascita[]')[$i]);
                     $studenti[$i]['sesso'] = $this->input->post('rg_sesso_studente[]')[$i];
                     $studenti[$i]['classe'] = $this->input->post('rg_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('rg_sezione[]')[$i];
@@ -484,14 +493,13 @@ class Istituto extends CI_Controller {
             if($this->session->dati_col)
             {
                 // Inserimento candidatura Il Calcio e le Ore di Lezione
-                $this->session->dati_col['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_col);
 
                 // Inserimento date incontri GiocoCalciando
                 for($i=0; $i<sizeof($this->input->post('col_data_incontro[]')); $i++)
                 {
                     // Formatta la data secondo il formato DATE di MySQL
-                    $data_incontro = date('Y-m-d', str_replace('/', '-', $this->input->post('col_data_incontro[]')[$i]));
+                    $data_incontro = $this->date->date_to_mysql($this->input->post('col_data_incontro[]')[$i]);
                     $this->db->insert('tab_incontri', array(
                         'data_incontro' => $data_incontro,
                         'id_candidatura' => $id_candidatura
@@ -521,7 +529,6 @@ class Istituto extends CI_Controller {
             if($this->session->dati_cs)
             {
                 // Inserimento candidatura Campionati Studenteschi
-                $this->session->dati_cs['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                 $id_candidatura = $this->istituto_model->create_candidatura($this->session->dati_cs);
 
                 // Inserimento Studenti Campionati Studenteschi
@@ -531,7 +538,7 @@ class Istituto extends CI_Controller {
                     // Mappa tutti gli studenti per poterli inserire nel db.
                     $studenti[$i]['nome'] = $this->input->post('cs_nome_studente[]')[$i];
                     $studenti[$i]['cognome'] = $this->input->post('cs_cognome_studente[]')[$i];
-                    $studenti[$i]['data_nascita'] = $this->input->post('cs_data_nascita[]')[$i];
+                    $studenti[$i]['data_nascita'] = $this->date->date_to_mysql($this->input->post('cs_data_nascita[]')[$i]);
                     $studenti[$i]['sesso'] = $this->input->post('cs_sesso_studente[]')[$i];
                     $studenti[$i]['classe'] = $this->input->post('cs_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('cs_sezione[]')[$i];
@@ -594,7 +601,7 @@ class Istituto extends CI_Controller {
 
         // Impedisce di accedere al pannello di controllo
         // agli utenti non autorizzati.
-        if(!$this->session->istituto) return redirect('col/index');
+        if(!$this->session->istituto) return redirect('istituto/index');
 
         // Estrazione dati istituto
         $dati_istituto = $this->istituto_model->get($this->session->istituto['email']);
@@ -628,20 +635,35 @@ class Istituto extends CI_Controller {
             if($new_password)
             {
                 // ..ricerca l' indirizzo email dell' istituto nel db..
-                $email_istituto = $this->istituto_model
-                    ->get_by_id($in_cod_meccanografico)['email_referente'];
+                $istituto = $this->istituto_model
+                    ->get_by_id($in_cod_meccanografico);
                 
-                // ..ed invia una mail all'indirizzo, con le informazioni
-                // riguardanti la nuova password.
-                return $this->send_new_password_mail($email_istituto, $new_password);
+                if($istituto)
+                {
+                    $email_istituto = $istituto['email_referente'];
+                    // ..ed invia una mail all'indirizzo, con le informazioni
+                    // riguardanti la nuova password.
+                    $this->send_new_password_mail($email_istituto, $new_password);
+
+                    // Carica la pagina che comunica all'utente
+                    // che l'operazione ha avuto successo.
+                    $data['title'] = 'Nuova Password Inviata';
+                    $this->load->view('header', $data);
+                    $this->load->view('istituto/ask_password_result');
+                    $this->load->view('footer');
+
+                    return;
+                }
             }
         }
         
         // Se i dati per l'invio della password non sono stati
         // inseriti o sono incorretti, ricarica il modulo per
         // reinserire gli stessi dati.
-        $this->load->view('header');
-        $this->load->view('ask_for_new_password');
+        $data['title'] = 'Reinvia Password';
+
+        $this->load->view('header', $data);
+        $this->load->view('istituto/ask_for_new_password');
         $this->load->view('footer');
     }
 
@@ -806,6 +828,7 @@ class Istituto extends CI_Controller {
             $this->form_validation->set_rules('cs_email_referente', 'Campionati Studenteschi - Email Referente', 'required|valid_email|matches[cs_conferma_email_referente]');
             $this->form_validation->set_rules('cs_conferma_email_referente', 'GiocoCalciando - Conferma Email Referente', 'required|valid_email');
         }
+
         $this->form_validation->set_rules('adesione_progetti', 'Adesione Progetti', 'required');
         $this->form_validation->set_rules('privacy_policy', 'Privacy Policy', 'required');
 
@@ -881,6 +904,6 @@ class Istituto extends CI_Controller {
     {
         $this->load->library('session');
 
-        return $this->istituto_model->login($this->session->istituto['email_referente'], $password);
+        return $this->istituto_model->login($this->session->istituto['email'], $password);
     }
 }

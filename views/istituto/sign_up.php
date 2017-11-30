@@ -58,18 +58,7 @@
                 ?>
 
                 <label class="form-label">Comune*:</label>
-                <?php
-                    // Crea una select con tante opzioni quante sono i comuni.
-                    // Ogni option è strutturata così: <option value="Nome Comune">Nome Comune</option>
-                    $options = array();
-                    $options[''] = 'Seleziona Comune';
-                    foreach($comuni as $comune)
-                    {
-                        $options[$comune['nome']] = $comune['nome'];
-                    }
-                    $comuni = array_column($options, 'nome');
-                    echo form_dropdown('comune', $options, set_value('comune'), 'class="form-control form-field fat"');
-                ?>
+                <input type="text" class="form-control form-field" name="comune" />
 
                 <label class="form-label">Indirizzo*:</label>
                 <input type="text" class="form-control form-field" name="indirizzo" value="<?php echo set_value('indirizzo'); ?>" />

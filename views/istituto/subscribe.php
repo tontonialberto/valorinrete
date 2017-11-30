@@ -294,5 +294,10 @@
             $('#col_div').append(col_classe);
             $('.datepicker').datepicker(datepicker_options);
         });
+
+        $('.datepicker').datepicker({ 
+            format: 'dd/mm/yyyy', 
+            autoclose: true 
+        });
     });
 </script>

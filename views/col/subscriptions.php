@@ -2,7 +2,7 @@
     <h2><?php echo $title; ?></h2>
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
-          <h3><?php echo $col['regione']; ?></h3>
+          <h3><?php echo $user['regione']; ?></h3>
         </div>
 
         <form action="<?php echo site_url('col/subscriptions'); ?>">

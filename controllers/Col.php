@@ -85,7 +85,7 @@ class Col extends CI_Controller {
                 'nome' => $col->nome_referente,
                 'cognome' => $col->cognome_referente,
                 'regione' => $col->regione,
-                'provincia' => $col->provincia
+                'provincia' => $col->provincia,
                 'lv' => 'col'
             );
 
