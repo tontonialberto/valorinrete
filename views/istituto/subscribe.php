@@ -17,20 +17,9 @@
 
             <?php echo form_open('istituto/subscribe'); ?>
 
-                <?php if($dati_cs || $dati_col): // Fa selezionare all'utente il grado dell'Istituto(poichè a questi progetti vi possono partecipare più tipi di scuole, dunque è importante sapere di che scuola si tratta) ?>
-                <label class="form-label">Grado Istituto:</label>
-                <select class="form-control form-field" name="grado_istituto">
-                    <option value="">Seleziona</option>
-                    <option value="2">Scuola Secondaria di 1° Grado</option>
-                    <option value="3">Scuola Secondaria di 2° Grado</option>
-                    <option value="4">Istituto Comprensivo</option>
-                </select>
-                <?php endif; ?>
-
                 <?php if($dati_gc): ?>
                 <div class="panel panel-default">
                     <div class="panel-heading"><h5>GiocoCalciando</h5></div>
-                    <input type="hidden" name="grado_istituto" value="1" /> 
                     <div id="gc_div" class="panel-body">
                         <div id="gc_studente">
                             <div class="row box">
@@ -93,7 +82,6 @@
                     <div class="panel-heading"><h5>Ragazze in Gioco</h5></div>
 
                     <?php if(!$dati_cs && !$dati_col): // Se Ragazze in Gioco è l'unico progetto selezionato, allora l'Istituto è una Scuola Secondaria di Primo Grado ?>
-                    <input type="hidden" name="grado_istituto" value="2" />
                     <?php endif; ?>
 
                     <div id="rg_div" class="panel-body">

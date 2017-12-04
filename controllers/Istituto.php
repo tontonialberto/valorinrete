@@ -28,6 +28,7 @@ class Istituto extends CI_Controller {
         17. form_validation_subscribe()
         18. create_istituto()
         19. password_is_correct()
+        20. _send_mail_giococalciando()
     */
 
 
@@ -227,7 +228,7 @@ class Istituto extends CI_Controller {
         // solamente se prima è stato compilato il modulo con
         // i dati dell'istituto.
         
-        if(!$this->session->go_to_select_projects) return show_404();
+        //if(!$this->session->go_to_select_projects) return show_404();
 
         $data['title'] = 'Selezione Progetti';
         $data['dati_istituto'] = $this->session->dati_istituto;
@@ -246,6 +247,8 @@ class Istituto extends CI_Controller {
         }
         else
         {
+            $_SESSION['dati_istituto']['grado_istituto'] = intval($this->input->post('grado_istituto'));
+
             // Salva in una sessione tutte le candidature ricevute in input.
             // Verranno salvati nel db alla fine dello step 3.
             
@@ -258,7 +261,7 @@ class Istituto extends CI_Controller {
                     'email_referente' => $this->input->post('gc_email_referente'),
                     'id_progetto' => 1, // id del progetto di riferimento(nel database)
                     'id_istituto' => $this->session->dati_istituto['cod_meccanografico'],
-                    'data_incontro' => $this->input->post('gc_data_incontro[]')[0]
+                    'data_incontro' => $this->input->post('gc_data_incontro[]')[0],
                 );
             }
             if($this->input->post('rg'))
@@ -300,8 +303,6 @@ class Istituto extends CI_Controller {
                 );
             }
 
-            $_SESSION['grado_istituto'] = $this->input->post('grado_istituto');
-
             // Fa in modo che l'utente non possa compilare nuovamente
             // il form appena compilato correttamente.
             
@@ -329,6 +330,7 @@ class Istituto extends CI_Controller {
     {
         $this->load->library('session');
         $this->load->library('date');
+        $this->load->library('account');
         $this->load->database();
 
         // Consente di accedere al pannello di iscrizione studenti
@@ -443,7 +445,6 @@ class Istituto extends CI_Controller {
             // 3)Inserimento classi/studenti
 
             // Inserimento Istituto
-            $_SESSION['dati_istituto']['grado_istituto'] = $this->input->post('grado_istituto');
             $this->create_istituto($this->session->dati_istituto);
 
             // Invia una mail al referente dell'Istituto
@@ -470,6 +471,7 @@ class Istituto extends CI_Controller {
 
                 // Inserimento Studenti GiocoCalciando
                 $studenti = array();
+                $gc_accounts = array(); // Usato per registrare gli account delle classi  
                 for($i=0; $i<sizeof($this->input->post('gc_nome_studente[]')); $i++)
                 {
                     // Mappa tutti gli studenti per poterli inserire nel db.
@@ -480,7 +482,7 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['classe'] = $this->input->post('gc_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('gc_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
-                    $studenti[$i]['grado_istituto'] = intval($this->input->post('grado_istituto'));
+                    $studenti[$i]['grado_istituto'] = 1;
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -491,7 +493,24 @@ class Istituto extends CI_Controller {
                         'id_studente' => $id_studente,
                         'id_candidatura' => $id_candidatura
                     ));
+
+                    // Aggiunge un elemento all'array $accounts,
+                    // generando username e password.
+
+                    $gc_accounts[$i]['username'] = $this->account->generate_username(array(
+                        $studenti[$i]['id_istituto'],
+                        $studenti[$i]['classe'],
+                        $studenti[$i]['sezione']
+                    ));
+                    $gc_accounts[$i]['password'] = $this->account->generate_password();
+                    $gc_accounts[$i]['classe'] = $studenti[$i]['classe'];
+                    $gc_accounts[$i]['sezione'] = $studenti[$i]['sezione'];
                 }
+
+                // Invia una mail al referente dell'istituto,
+                // specificando i dati di accesso per GiocoCalciando.
+
+                $this->_send_mail_giococalciando($this->session->dati_istituto['email_referente'], $gc_accounts);
             }
             if($this->session->dati_rg)
             {
@@ -522,7 +541,7 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['classe'] = $this->input->post('rg_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('rg_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
-                    $studenti[$i]['grado_istituto'] = intval($this->input->post('grado_istituto'));
+                    $studenti[$i]['grado_istituto'] = 2;
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -560,7 +579,7 @@ class Istituto extends CI_Controller {
                     $classi[$i]['sezione'] = $this->input->post('col_sezione[]')[$i];
                     $classi[$i]['n_studenti'] = $this->input->post('col_n_studenti[]')[$i];
                     $classi[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
-                    $classi[$i]['grado_istituto'] = intval($this->input->post('grado_istituto'));
+                    $classi[$i]['grado_istituto'] = $this->session->dati_istituto['grado_istituto'];
 
                     $id_classe = $this->istituto_model->create_classe($classi[$i]);
 
@@ -590,7 +609,7 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['classe'] = $this->input->post('cs_classe[]')[$i];
                     $studenti[$i]['sezione'] = $this->input->post('cs_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
-                    $studenti[$i]['grado_istituto'] = intval($this->input->post('grado_istituto'));
+                    $studenti[$i]['grado_istituto'] = $this->session->dati_istituto['grado_istituto'];
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -663,8 +682,9 @@ class Istituto extends CI_Controller {
         $data['title'] = 'Riepilogo Dati';
         $data['user'] = $this->session->istituto;
         $data['istituto'] = (array)$dati_istituto[0];
-        $data['candidature'] = $dati_candidature;
+        $data['candidature'] = (array)$dati_candidature;
 
+        $this->load->view('header', $data);
         $this->load->view('menu', $data);
         $this->load->view('istituto/profile_overview', $data);
     }
@@ -855,6 +875,8 @@ class Istituto extends CI_Controller {
         // col = Il Calcio e le Ore di Lezione
         // cs  = Campionati Studenteschi
         
+        $this->form_validation->set_rules('grado_istituto', 'Grado Istituto', 'required');
+
         if($this->input->post('gc'))
         {
             $this->form_validation->set_rules('gc_nome_referente', 'GiocoCalciando - Nome Referente', 'required');
@@ -950,7 +972,6 @@ class Istituto extends CI_Controller {
             $this->form_validation->set_rules('col_sezione[]', 'Il Calcio e le Ore di Lezione - Sezione', 'required');
             $this->form_validation->set_rules('col_n_studenti[]', 'Il Calcio e le Ore di Lezione - N°Studenti', 'required');
         }
-        $this->form_validation->set_rules('grado_istituto', 'Grado Istituto', 'required');
 
         return $this->form_validation->run();
     }
@@ -974,5 +995,30 @@ class Istituto extends CI_Controller {
         $this->load->library('session');
 
         return $this->istituto_model->login($this->session->istituto['email'], $password);
+    }
+
+    /* 20. _send_mail_giococalciando() */
+    // Invia una mail all'indirizzo specificato
+    // indicando i dati di accesso al GiocoCalciando.
+
+    private function _send_mail_giococalciando($to, array $accounts) // $account: ['username', 'password', 'classe', 'sezione']
+    {
+        $message = "";
+
+        foreach($accounts as $account)
+        {
+            $message .= "Classe: " . $account['classe'] . $account['sezione'] . " <br />";
+            $message .= "Username: " . $account['username'] . "<br />";
+            $message .= "Password: " . $account['password'] . "<br />";
+            $message .= "<br />";
+        }
+
+        $this->email->from('info@go2mkt.com', 'Portale Valorinrete');
+        $this->email->to($to);
+        $this->email->subject('Dati GiocoCalciando');
+        $this->email->message($message);
+        $this->email->send();
+
+        var_dump($message);
     }
 }

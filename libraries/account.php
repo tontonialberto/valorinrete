@@ -20,7 +20,7 @@ class Account {
 			$username .= '_';
 		}
 
-		return uniqid($username);
+		return $username;
 	}
 
 	// Genera una password random, la cui lunghezza
@@ -29,6 +29,6 @@ class Account {
 
 	public function generate_password($length = 8)
 	{
-		return substr(uniqid(mt_rand(), true), 0, $l);
+		return substr(uniqid(mt_rand(), true), 0, $length);
 	}	
 }

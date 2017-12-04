@@ -42,7 +42,7 @@
     <script src="/valorinrete/js/bootstrap-datetimepicker.min.js"></script>
     <script src="/valorinrete/js/bootstrap-datepicker.js"></script>
     <!--<script src="/js/ckeditor/ckeditor.js"></script>-->
-    <script src="//cdn.ckeditor.com/4.6.2/full/ckeditor.js"></script>
+    <!-- <script src="//cdn.ckeditor.com/4.6.2/full/ckeditor.js"></script> -->
     <script src="/valorinrete/js/jquery.dataTables.min.js"></script>
     <script src="/valorinrete/js/dataTables.bootstrap.min.js"></script>
     <script src="/valorinrete/js/chart/Chart.bundle.min.js"></script>

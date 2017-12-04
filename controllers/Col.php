@@ -203,7 +203,7 @@ class Col extends CI_Controller {
         $this->redirect_if_not_logged_in('col/index');
 
         // Applica il filtro degli iscritti per provincia
-        $provincia = $this->input->get('filtra_iscritti_provincia') ? $this->input->get('provincia') : NULL;
+        $provincia = $this->input->get('filtra_iscritti_provincia') ? $this->input->get('filtra_iscritti_provincia') : NULL;
 
         $data['subscriptions'] = $this->common_model->get_subscriptions($this->session->col['regione'], $provincia);
         $data['title'] = 'Estrazione Iscritti ai Progetti';

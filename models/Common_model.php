@@ -100,7 +100,7 @@ class Common_model extends CI_Model {
     {
         // Nel caso in cui non venga specificata la provincia,
         // consente di ricercare solamente in base alla regione.
-        $provinciaOrTrue = $provincia ? array('tab_istituti.provincia' => $provincia) : 1;
+        $provinciaOrTrue = $provincia ? array('tab_istituti.provincia' => $provincia) : array('1' => 1);
 
         // La piattaforma prevede alcuni progetti ai quali
         // si possono iscrivere intere classi, ed altri ai quali

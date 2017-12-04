@@ -11,7 +11,7 @@
               <select class="form-control" name="filtra_iscritti_provincia">
                 <option value="">Filtra per Provincia</option>
                 <?php foreach($province as $provincia): ?>
-                <option value="<?php echo $provincia['nome']; ?>"><?php echo $provincia['nome']; ?></option>
+                  <option value="<?php echo $provincia['nome']; ?>"><?php echo $provincia['nome']; ?></option>
                 <?php endforeach; ?>
               </select>
             </div>

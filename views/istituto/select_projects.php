@@ -14,9 +14,18 @@
             <?php echo validation_errors(); ?>
 
                 <?php echo form_open('istituto/select_projects'); ?>
+                
+                    <label class="form-label">Grado Istituto:</label>
+                    <select class="form-control form-field" name="grado_istituto">
+                        <option value="">Seleziona</option>
+                        <option value="1">Scuola Primaria</option>
+                        <option value="2">Scuola Secondaria di 1° Grado</option>
+                        <option value="3">Scuola Secondaria di 2° Grado</option>
+                        <option value="4">Istituto Comprensivo</option>
+                    </select>
 
                     <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                        <div id="gc_form" class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
                             <div class="text-center">
                                 <label for="gc" class="btn btn-primary form-field">GiocoCalciando</label>
                             </div>
@@ -52,7 +61,7 @@
                             </div>
                         </div>
 
-                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                        <div id="rg_form" class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
                             <div class="text-center">
                                 <label for="rg" class="btn btn-primary form-field">Ragazze in Gioco</label>
                             </div>
@@ -105,7 +114,7 @@
                             </div>
                         </div>
 
-                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                        <div id="col_form" class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
                             <div class="text-center">
                                 <label for="col" class="btn btn-primary form-field">Il Calcio e le Ore di Lezione</label>
                             </div>
@@ -141,7 +150,7 @@
                             </div>
                         </div>
 
-                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                        <div id="cs_form" class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
                             <div class="text-center">
                                 <label for="cs" class="btn btn-primary form-field">Campionati Studenteschi</label>
                             </div>
@@ -196,14 +205,18 @@
 
 <script type="text/javascript">
     $(document).ready(() => {
+
         // cicla tutti i checkbox con classe display-controller
         // ed al variare di uno di loro, mostra o nasconde 
         // il div(con classe display-item) direttamente successivo ad esso.
+
         $('input[type="checkbox"].display-controller').change(function() {
             if($(this).prop('checked')) {
+
                 // per mostrare/nascondere i div, viene mostrato/nascosto
                 // l'elemento direttamente successivo al checkbox.display-controller
                 // avente la classe display-item
+
                 $(this).next('.display-item').show();
                 return;
             }
@@ -212,9 +225,55 @@
 
         // Applica il formato Giorno/Mese/Anno
         // a tutti gli input datepicker nella pagina
+
         $('.datepicker').datepicker({ 
             format: 'dd/mm/yyyy', 
             autoclose: true 
+        });
+
+        // -----------------------------------------------------
+
+        // Le form dei progetti vengono mostrate in base all'opzione(grado_istituto) selezionata.
+
+        // Nasconde tutte le form dei progetti.
+        function hideAllProjects() {
+            $('#col_form, #gc_form, #rg_form, #cs_form').hide();
+        }
+
+        // Mostra tutte le form dei progetti.
+        function showAllProjects() {
+            $('#col_form, #gc_form, #rg_form, #cs_form').show();
+        }
+
+        // Al caricamento della pagina, nessuna opzione è selezionata,
+        // quindi nasconde tutti i progetti.
+        hideAllProjects();
+
+        // Quando viene selezionata un'opzione, mostra i progetti
+        // in base al valore selezionato.
+        $('select[name="grado_istituto"]').change(function() {
+
+            hideAllProjects();
+
+            const selectValue = parseInt($(this).val());
+            
+            switch(selectValue) {
+                case 1:
+                    $('#gc_form').show();
+                break;
+
+                case 2:
+                    $('#rg_form, #cs_form').show();
+                break;
+
+                case 3: 
+                    $('#col_form, #cs_form').show();
+                break;
+
+                case 4: 
+                    showAllProjects();
+                break;
+            }
         });
     });
 </script>
