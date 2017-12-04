@@ -30,6 +30,18 @@ class Col extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('col_model');
+        $this->load->library('debug');
+
+        // Utile in fase di debug, stampa
+        // in modo ordinato tutte le variabili
+        // di sessione.
+        
+        $this->debug->print_session();
+
+        // Utile in fase di debug, stampa tutti
+        // i dati passati tramite HTTP.
+        
+        $this->debug->print_request();
     }
 
     /* 2. index() */

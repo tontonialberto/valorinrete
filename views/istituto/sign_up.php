@@ -58,7 +58,7 @@
                 ?>
 
                 <label class="form-label">Comune*:</label>
-                <input type="text" class="form-control form-field" name="comune" />
+                <input type="text" class="form-control form-field" name="comune" value="<?php echo set_value('comune'); ?>" />
 
                 <label class="form-label">Indirizzo*:</label>
                 <input type="text" class="form-control form-field" name="indirizzo" value="<?php echo set_value('indirizzo'); ?>" />

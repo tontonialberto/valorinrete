@@ -19,6 +19,7 @@ class Istituto_model extends CI_Model {
     */
 
     /* 1. __construct() */
+
     public function __construct()
     {
         parent::__construct();
@@ -30,6 +31,7 @@ class Istituto_model extends CI_Model {
     // a partire da un valore passato come parametro.
     // Inserisce anche il grado dell'istituto
     // all'interno della tabella tab_gradi_istituti.
+    
     public function create($istituto = NULL)
     {
         if(!$istituto) return FALSE;
@@ -46,10 +48,12 @@ class Istituto_model extends CI_Model {
     // Inserisce una nuova candidatura nella tabella tab_candidature.
     // Se la candidatura viene inserita con successo, ritorna l'id di quest'ultima,
     // altrimenti ritorna FALSE.
+    
     public function create_candidatura($candidatura = NULL)
     {   
         if(!$candidatura) return FALSE;
         
+        unset($candidatura['data_incontro']);
         $candidatura['candidatura_approvata'] = 0;
 
         if(!$this->db->insert('tab_candidature', $candidatura)) return FALSE;
@@ -59,16 +63,23 @@ class Istituto_model extends CI_Model {
     /* 4. get_candidature_by_istituto() */
     // Prende in input contenente i dati di un Istituto(Codice meccanografico, email referente, ecc..)
     // e restituisce un array associativo di tutte le candidature appartenenti a quell'Istituto
+    
     public function get_candidature_by_istituto(array $istituto)
     {
-        $query = $this->db->select('*')
+        $query = $this->db->select('
+                tab_progetti.nome AS progetto,
+                tab_istituti.cod_meccanografico AS cod_meccanografico,
+                tab_istituti.grado_istituto AS grado_istituto,
+                tab_istituti.nome_istituto AS nome_istituto,
+                tab_candidature.nome_referente AS nome_referente,
+                tab_candidature.cognome_referente AS cognome_referente,
+                tab_candidature.telefono_referente AS telefono_referente')
             ->from('tab_candidature')
             ->join('tab_progetti', 'tab_progetti.id = tab_candidature.id_progetto')
             ->join('tab_istituti', 'tab_istituti.cod_meccanografico = tab_candidature.id_istituto')
             ->where(array('tab_istituti.cod_meccanografico' => $istituto[0]->cod_meccanografico))
             ->get();
-        
-        var_dump($query->num_rows());
+            
         if(!$query->num_rows()) return FALSE;
         return $query->result_array();
     }
@@ -77,6 +88,7 @@ class Istituto_model extends CI_Model {
     // Inserisce un nuovo record nella tabella tab_studenti.
     // Se lo studente viene inserito con successo, restituisce
     // l'id dello studente appena inserito, altrimenti ritorna FALSE.
+    
     public function create_studente($studente = NULL)
     {
         if(!$studente) return FALSE;
@@ -91,6 +103,7 @@ class Istituto_model extends CI_Model {
     // Inserisce un nuovo record nella tabella tab_classi.
     // Se la classe viene inserita con successo, restituisce
     // l'id della classe appena inserita, altrimenti ritorna FALSE.
+    
     public function create_classe($classe = NULL)
     {
         if(!$classe) return FALSE;
@@ -104,6 +117,7 @@ class Istituto_model extends CI_Model {
     // tra gli Istituti presenti nel database che hanno attivato il loro account. 
     // Se la ricerca ha successo,
     // restituisce il record trovato, altrimenti ritorna FALSE.
+    
     public function login($email, $password)
     {
         $query = $this->db
@@ -126,6 +140,7 @@ class Istituto_model extends CI_Model {
     // ricerca una corrispondenza all'interno del database
     // e se la trova, attiva l'account corrispondente e ritorna TRUE.
     // Altrimenti ritorna FALSE.
+    
     public function activate($token)
     {
         $query = $this->db
@@ -142,6 +157,7 @@ class Istituto_model extends CI_Model {
     // la mail referente uguale a quella specificata. 
     // Se il parametro mail è nullo,
     // restituisce i dati di tutti gli istituti presenti nel db.
+    
     public function get($email = NULL)
     {
         if($email === NULL)
@@ -166,6 +182,7 @@ class Istituto_model extends CI_Model {
     // Prende in input il codice meccanografico(identificatore univoco)
     // di un istituto e restituisce un array associativo con i dati
     // dell'istituto
+    
     public function get_by_id($cod_meccanografico)
     {
         $query = $this->db
@@ -195,6 +212,7 @@ class Istituto_model extends CI_Model {
     // e cambia la sua password(generandola randomicamente). 
     // Se l'operazione ha successo, restituisce la nuova password,
     // altrimenti ritorna false.
+    
     public function set_random_password($cod_meccanografico)
     {
         $this->load->helper('string');
@@ -212,6 +230,7 @@ class Istituto_model extends CI_Model {
     /* 12. set_password() */
     // Cambia la password di un istituto con una nuova passata come parametro.
     // Se l'operazione ha successo restituisce TRUE, altrimenti FALSE.
+    
     public function set_password($cod_meccanografico, $password)
     {
         $query = $this->db->where(array('cod_meccanografico' => $cod_meccanografico))

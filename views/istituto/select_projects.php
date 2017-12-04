@@ -182,10 +182,10 @@
                     </label>
                     <div class="row">
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                            <button type="submit" name="go_to_subscribe" class="btn btn-primary btn-block btn-fat">Vai allo step 3</button>
+                            <input type="submit" name="go_to_subscribe" class="btn btn-primary btn-block btn-fat" value="Vai allo step 3" />
                         </div>
                         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-                            <button type="submit" name="skip_subscribe" class="btn btn-primary btn-block btn-fat">Salta lo step 3(Potrai completarlo in seguito)</button>
+                            <input type="submit" name="skip_subscribe" class="btn btn-primary btn-block btn-fat" value="Salta lo step 3(Potrai completarlo in seguito)"/>
                         </div>
                     </div>
                     <h4>* Campo Obbligatorio</h4>
