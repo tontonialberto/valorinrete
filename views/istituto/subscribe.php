@@ -235,6 +235,16 @@
                                                 <option value="H">H</option>
                                             </select>
                                         </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12 col-lg-12">
+                                                <select name="cs_tipo_campionato[]" class="form-control form-field">
+                                                    <option value="">Seleziona Campionato</option>
+                                                    <option value="Calcio a 5">Calcio a 5</option>
+                                                    <option value="Calcio a 11">Calcio a 11</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

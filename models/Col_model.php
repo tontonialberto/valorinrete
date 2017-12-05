@@ -20,21 +20,36 @@ class Col_model extends CI_Model {
 
     /* 2. create() */
     // Inserisce un nuovo COL nel database
-    // a partire dai valori presenti in una form.
-    public function create()
+    // a partire da un array passato come parametro.
+    // Se l'array è vuoto, utilizza i valori presenti in una form.
+    public function create(array $data = NULL)
     {
-        $data = array(
-            'id' => NULL,
-            'nome_referente' => $this->input->post('nome_referente'),
-            'cognome_referente' => $this->input->post('cognome_referente'),
-            'email_referente' => $this->input->post('email_referente'),
-            'password' => md5($this->input->post('password')),
-            'comune' => $this->input->post('comune'),
-            'provincia' => $this->input->post('provincia'),
-            'regione' => $this->input->post('regione'),
-            'indirizzo' => $this->input->post('indirizzo'),
-            'token_attiva_account' => md5(uniqid($this->input->post('email_referente'))) // viene inviato via mail all'utente per confermare la registrazione
-        );
+        if($data === NULL)
+        {
+            $data = array(
+                'id' => NULL,
+                'nome_referente' => $this->input->post('nome_referente'),
+                'cognome_referente' => $this->input->post('cognome_referente'),
+                'email_referente' => $this->input->post('email_referente'),
+                'password' => md5($this->input->post('password')),
+                'regione' => $this->input->post('regione'),
+                'indirizzo' => $this->input->post('indirizzo'),
+                'token_attiva_account' => md5(uniqid($this->input->post('email_referente'))) // viene inviato via mail all'utente per confermare la registrazione
+            );
+        }
+        else
+        {
+            if($data['regione'] == 'Trentino-Alto Adige - Trento')
+            {
+                $data['regione'] = 'Trentino-Alto Adige';
+                $data['provincia'] = 'Trento';
+            }
+            else if($data['regione'] == 'Trentino-Alto Adige - Bolzano')
+            {
+                $data['regione'] = 'Trentino-Alto Adige';
+                $data['provincia'] = 'Bolzano';
+            }
+        }
 
         return $this->db->insert('tab_col', $data);
     }

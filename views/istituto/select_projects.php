@@ -238,6 +238,7 @@
         // Nasconde tutte le form dei progetti.
         function hideAllProjects() {
             $('#col_form, #gc_form, #rg_form, #cs_form').hide();
+            $('#col, #gc, #rg, #cs').attr('checked', false);
         }
 
         // Mostra tutte le form dei progetti.
@@ -260,14 +261,17 @@
             switch(selectValue) {
                 case 1:
                     $('#gc_form').show();
+                    $('#col, #rg, #cs').attr('checked', false);
                 break;
 
                 case 2:
                     $('#rg_form, #cs_form').show();
+                    $('#col, #gc').attr('checked', false);
                 break;
 
                 case 3: 
                     $('#col_form, #cs_form').show();
+                    $('#gc, #rg').attr('checked', false);
                 break;
 
                 case 4: 

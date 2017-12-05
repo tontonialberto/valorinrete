@@ -90,6 +90,8 @@ class Istituto extends CI_Controller {
         $this->load->library('session');
         if(isset($this->session->istituto)) return redirect('istituto/index');
 
+        $this->session->sess_destroy(); // Evita di portarsi dietro dati di sessioni precedenti
+
         $data['title'] = 'Login Istituto';
 
         $this->load->view('header', $data);
@@ -228,7 +230,7 @@ class Istituto extends CI_Controller {
         // solamente se prima è stato compilato il modulo con
         // i dati dell'istituto.
         
-        //if(!$this->session->go_to_select_projects) return show_404();
+        if(!$this->session->go_to_select_projects) return show_404();
 
         $data['title'] = 'Selezione Progetti';
         $data['dati_istituto'] = $this->session->dati_istituto;
@@ -471,7 +473,7 @@ class Istituto extends CI_Controller {
 
                 // Inserimento Studenti GiocoCalciando
                 $studenti = array();
-                $gc_accounts = array(); // Usato per registrare gli account delle classi  
+                $gc_accounts = array(); // Usato per registrare gli account degli studenti
                 for($i=0; $i<sizeof($this->input->post('gc_nome_studente[]')); $i++)
                 {
                     // Mappa tutti gli studenti per poterli inserire nel db.
@@ -483,6 +485,13 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['sezione'] = $this->input->post('gc_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                     $studenti[$i]['grado_istituto'] = 1;
+                    $studenti[$i]['nickname'] = $this->account->generate_username(array(
+                        $studenti[$i]['nome'],
+                        $studenti[$i]['cognome'],
+                        $studenti[$i]['classe'],
+                        $studenti[$i]['sezione']
+                    )); // Username dello studente per GiocoCalciando
+                    $studenti[$i]['password'] = $this->account->generate_password();
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -497,12 +506,8 @@ class Istituto extends CI_Controller {
                     // Aggiunge un elemento all'array $accounts,
                     // generando username e password.
 
-                    $gc_accounts[$i]['username'] = $this->account->generate_username(array(
-                        $studenti[$i]['id_istituto'],
-                        $studenti[$i]['classe'],
-                        $studenti[$i]['sezione']
-                    ));
-                    $gc_accounts[$i]['password'] = $this->account->generate_password();
+                    $gc_accounts[$i]['username'] = $studenti[$i]['nickname'];
+                    $gc_accounts[$i]['password'] = $studenti[$i]['password'];
                     $gc_accounts[$i]['classe'] = $studenti[$i]['classe'];
                     $gc_accounts[$i]['sezione'] = $studenti[$i]['sezione'];
                 }
@@ -610,6 +615,7 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['sezione'] = $this->input->post('cs_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                     $studenti[$i]['grado_istituto'] = $this->session->dati_istituto['grado_istituto'];
+                    $studenti[$i]['tipo_campionato'] = $this->input->post('cs_tipo_campionato[]')[$i];
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -965,6 +971,7 @@ class Istituto extends CI_Controller {
             $this->form_validation->set_rules('cs_classe[]', 'Campionati Studenteschi - Classe', 'required');
             $this->form_validation->set_rules('cs_sezione[]', 'Campionati Studenteschi - Sezione', 'required');
             $this->form_validation->set_rules('cs_data_nascita[]', 'Campionati Studenteschi - Data di Nascita', 'required');
+            $this->form_validation->set_rules('cs_tipo_campionato[]', 'Campionati Studenteschi - Campionato', 'required');
         }
         if(isset($this->session->dati_col))
         {

@@ -13,6 +13,7 @@ class Col extends CI_Controller {
         7. activate_account()
         8. subscriptions()
         9. download_anagrafiche()
+        15. controllo_email()
         
 ---------------------------------------
 
@@ -65,6 +66,8 @@ class Col extends CI_Controller {
         $this->load->helper('url');
 
         $this->redirect_if_logged_in('col/index');
+
+        $this->session->sess_destroy(); // Evita di portarsi dietro dati di sessioni precedenti
 
         $data['title'] = 'Login COL';
 
@@ -333,11 +336,50 @@ class Col extends CI_Controller {
       $this->form_validation->set_rules('conferma_email_referente', 'Conferma Email', 'required|valid_email');
       $this->form_validation->set_rules('password', 'Password', 'required|min_length[6]|matches[conferma_password]');
       $this->form_validation->set_rules('conferma_password', 'Conferma Password', 'required|min_length[6]');
-      $this->form_validation->set_rules('comune', 'Comune', 'required');
-      $this->form_validation->set_rules('provincia', 'Provincia', 'required');
+      //$this->form_validation->set_rules('comune', 'Comune', 'required');
+      //$this->form_validation->set_rules('provincia', 'Provincia', 'required');
       $this->form_validation->set_rules('regione', 'Regione', 'required');
       $this->form_validation->set_rules('indirizzo', 'Indirizzo', 'required');
 
       return $this->form_validation->run();
+    }
+
+    /* 15. controllo_email() */
+    // Prende in input un indirizzo email ed una regione
+    // e controlla nel db se l'email appartiene al COL
+    // di quella regione. Restituisce un oggetto JSON
+    // con il risultato dell'operazione.
+
+    public function controllo_email()
+    {
+        $this->load->database();
+
+        $request = array(
+            'email' => $this->input->post('email'),
+            'regione' => $this->input->post('regione')
+        );
+
+        $query = $this->db->select('*')
+            ->from('tab_col_controllo')
+            ->where(array('email' => $request['email']))
+            ->where(array('regione' => $request['regione']))
+            ->get();
+        
+        $response = array(
+            'ok' => FALSE,
+            'err' => NULL
+        );
+
+        if(!$query->num_rows())
+        {
+            $response['err'] = 'Nessuna corrispondenza trovata fra email e regione';  
+            echo json_encode($response);
+            return;
+        } 
+
+        $response['ok'] = true;
+        $response['err'] = FALSE;
+        echo json_encode($response);
+        return;
     }
 }
