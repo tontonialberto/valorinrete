@@ -358,6 +358,7 @@ class Istituto extends CI_Controller {
             
             // Inserimento Istituto
             $this->create_istituto($this->session->dati_istituto);
+            $this->send_mail($this->session->dati_istituto['email_referente']);
             
             if($this->session->dati_gc)
             {
