@@ -95,8 +95,6 @@ class Istituto_model extends CI_Model {
         
         if(!$this->db->insert('tab_studenti', $studente)) return FALSE;
         return $this->db->insert_id();
-
-        die($studente);
     }
 
     /* 6. create_classe() */
@@ -121,7 +119,23 @@ class Istituto_model extends CI_Model {
     public function login($email, $password)
     {
         $query = $this->db
-            ->select('cod_meccanografico, nome_istituto, password, cap, email_istituto, telefono_referente, nome_referente, cognome_referente, email_referente, comune, provincia, regione, indirizzo, account_attivo, token_attiva_account')
+            ->select('
+                cod_meccanografico, 
+                nome_istituto, 
+                password, 
+                cap, 
+                email_istituto, 
+                telefono_referente, 
+                nome_referente, 
+                cognome_referente, 
+                email_referente, 
+                comune, 
+                provincia, 
+                regione, 
+                indirizzo, 
+                account_attivo, 
+                token_attiva_account,
+                grado_istituto')
             ->from('tab_istituti')
             ->where(array('email_referente' => $email))
             ->where(array('account_attivo' => 1))
@@ -239,5 +253,20 @@ class Istituto_model extends CI_Model {
         if(!$this->db->affected_rows()) return FALSE;
 
         return TRUE;
+    }
+
+    // Dato il codice meccanografico di un Istituto,
+    // restituisce tutti i progetti a cui è iscritto.
+    public function get_progetti_by_istituto($cod_meccanografico)
+    {
+        $query = $this->db->select('pro.nome AS progetto, cnd.id AS id_candidatura')
+            ->from('tab_istituti ist')
+            ->join('tab_candidature cnd', 'ist.cod_meccanografico = cnd.id_istituto')
+            ->join('tab_progetti pro', 'cnd.id_progetto = pro.id')
+            ->where(array('ist.cod_meccanografico' => $cod_meccanografico))
+            ->get();
+
+        if(!$query->num_rows()) return FALSE;
+        return $query->result_array();
     }
 }

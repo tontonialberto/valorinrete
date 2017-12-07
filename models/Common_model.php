@@ -102,6 +102,21 @@ class Common_model extends CI_Model {
         // consente di ricercare solamente in base alla regione.
         $provinciaOrTrue = $provincia ? array('tab_istituti.provincia' => $provincia) : array('1' => 1);
 
+        if($regione == 'Trentino-Alto Adige - Bolzano')
+        {
+            $regione = 'Trentino-Alto Adige';
+            $provinciaOrTrue = 'Bolzano';
+        }
+        else if($regione == 'Trentino-Alto Adige - Trento')
+        {
+            $regione = 'Trentino-Alto Adige';
+            $provinciaOrTrue = 'Trento';
+        }
+        else if($regione == "Piemonte - Valle d'Aosta")
+        {
+            $regione = 'Piemonte';
+        }
+
         // La piattaforma prevede alcuni progetti ai quali
         // si possono iscrivere intere classi, ed altri ai quali
         // si possono iscrivere singoli studenti. Perciò è necessario

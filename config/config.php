@@ -10,7 +10,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 / Used by helpers & libraries for doing actions like debug, etc.
 /
 */
-$config['app_env'] = 'development';
+$config['app_env'] = 'production';
 
 /*
 |--------------------------------------------------------------------------

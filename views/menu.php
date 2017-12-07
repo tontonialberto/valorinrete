@@ -1,8 +1,8 @@
 <div class="menu">
     <ul>
         <li>
-            <a>
-                <i class="iob iob-user roundGreyIcon"></i>
+            <a style="cursor: pointer">
+                <i class="fa fa-user roundGreyIcon"></i>
                 <?php echo $user['email']; ?>
             </a>
         </li>
@@ -19,11 +19,13 @@
         <?php if($user['lv'] === 'istituto'): ?>
         <li>
             <a href="<?php echo site_url('istituto/add_subscriptions'); ?>">
-                <i class="fa fa-id-badge roundGreyIcon"></i>
+                <i class="glyphicon glyphicon-plus roundGreyIcon"></i>
                 Aggiungi Classi/Studenti
             </a>
+        </li>
+        <li>
             <a href="<?php echo site_url('istituto/profile_overview'); ?>">
-                <i class="fa fa-id-badge roundGreyIcon"></i>
+                <i class="glyphicon glyphicon-list-alt roundGreyIcon"></i>
                 Riepilogo Dati
             </a>
         </li>

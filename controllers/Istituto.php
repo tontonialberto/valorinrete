@@ -16,6 +16,7 @@ class Istituto extends CI_Controller {
         10. profile_overview()
         11. ask_for_new_password()
         12. change_password()
+        21. add_subscriptions()
 
 ------------------------------------
 
@@ -29,6 +30,7 @@ class Istituto extends CI_Controller {
         18. create_istituto()
         19. password_is_correct()
         20. _send_mail_giococalciando()
+        22. form_validation_add_subscriptions()
     */
 
 
@@ -128,7 +130,8 @@ class Istituto extends CI_Controller {
                 'cognome_referente' => $istituto->cognome_referente,
                 'cod_meccanografico' => $istituto->cod_meccanografico,
                 'nome_istituto' => $istituto->nome_istituto,
-                'lv' => 'istituto'
+                'lv' => 'istituto',
+                'grado_istituto' => $istituto->grado_istituto
             );
 
             redirect('istituto/index');
@@ -491,7 +494,8 @@ class Istituto extends CI_Controller {
                         $studenti[$i]['classe'],
                         $studenti[$i]['sezione']
                     )); // Username dello studente per GiocoCalciando
-                    $studenti[$i]['password'] = $this->account->generate_password();
+                    $student_password = $this->account->generate_password(); // Password in chiaro
+                    $studenti[$i]['password'] = md5($student_password); // La password criptata viene inserita nel db
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -507,7 +511,7 @@ class Istituto extends CI_Controller {
                     // generando username e password.
 
                     $gc_accounts[$i]['username'] = $studenti[$i]['nickname'];
-                    $gc_accounts[$i]['password'] = $studenti[$i]['password'];
+                    $gc_accounts[$i]['password'] = $student_password;
                     $gc_accounts[$i]['classe'] = $studenti[$i]['classe'];
                     $gc_accounts[$i]['sezione'] = $studenti[$i]['sezione'];
                 }
@@ -615,7 +619,6 @@ class Istituto extends CI_Controller {
                     $studenti[$i]['sezione'] = $this->input->post('cs_sezione[]')[$i];
                     $studenti[$i]['id_istituto'] = $this->session->dati_istituto['cod_meccanografico'];
                     $studenti[$i]['grado_istituto'] = $this->session->dati_istituto['grado_istituto'];
-                    $studenti[$i]['tipo_campionato'] = $this->input->post('cs_tipo_campionato[]')[$i];
 
                     $id_studente = $this->istituto_model->create_studente($studenti[$i]);
 
@@ -624,7 +627,8 @@ class Istituto extends CI_Controller {
                     
                     $this->db->insert('tab_studenti_candidature', array(
                         'id_studente' => $id_studente,
-                        'id_candidatura' => $id_candidatura
+                        'id_candidatura' => $id_candidatura,
+                        'tipo_campionato' => $this->input->post('cs_tipo_campionato[]')[$i]
                     ));
                 }
             }
@@ -1025,7 +1029,267 @@ class Istituto extends CI_Controller {
         $this->email->subject('Dati GiocoCalciando');
         $this->email->message($message);
         $this->email->send();
+    }
 
-        var_dump($message);
+    // Pagina del Pannello di Controllo.
+    // Consente di aggiungere classi e studenti ai progetti
+    // selezionati durante la fase di iscrizione.
+
+    public function add_subscriptions()
+    {
+        $this->load->library('session');
+        $this->load->helper('url');
+        $this->load->library('date');
+        $this->load->library('account');
+
+        if(!$this->session->istituto) return redirect('istituto/');
+
+        $data['progetti'] = $this->istituto_model
+            ->get_progetti_by_istituto($this->session->istituto['cod_meccanografico']);
+        $data['title'] = 'Aggiungi Studenti';
+        $data['user'] = $this->session->istituto;
+
+        if($this->form_validation_add_subscriptions() === FALSE)
+        {
+            $this->load->view('header', $data);
+            $this->load->view('menu', $data);
+            $this->load->view('istituto/add_subscriptions', $data);
+            $this->load->view('footer');
+            return;
+        }
+        
+        // Se gli studenti/classi vengono inseriti correttamente..
+        // .. vengono inseriti nel database
+
+        $id_candidatura = NULL;
+        
+        if($this->input->post('gc'))
+        {
+            // Ricerca l'id della candidatura da inserire in tab_studenti_candidature
+            foreach($data['progetti'] as $progetto)
+            {
+                if($progetto['progetto'] === 'GiocoCalciando')
+                {
+                    $id_candidatura = $progetto['id_candidatura'];
+                    break;
+                }
+            }
+            // Inserimento Studenti GiocoCalciando
+            $studenti = array();
+            $gc_accounts = array(); // Usato per registrare gli account degli studenti
+            for($i=0; $i<sizeof($this->input->post('gc_nome_studente[]')); $i++)
+            {
+                // Mappa tutti gli studenti per poterli inserire nel db.
+                $studenti[$i]['nome'] = $this->input->post('gc_nome_studente[]')[$i];
+                $studenti[$i]['cognome'] = $this->input->post('gc_cognome_studente[]')[$i];
+                $studenti[$i]['data_nascita'] = $this->date->to_mysql_date($this->input->post('gc_data_nascita[]')[$i]);
+                $studenti[$i]['sesso'] = $this->input->post('gc_sesso_studente[]')[$i];
+                $studenti[$i]['classe'] = $this->input->post('gc_classe[]')[$i];
+                $studenti[$i]['sezione'] = $this->input->post('gc_sezione[]')[$i];
+                $studenti[$i]['id_istituto'] = $this->session->istituto['cod_meccanografico'];
+                $studenti[$i]['grado_istituto'] = 1;
+                $studenti[$i]['nickname'] = $this->account->generate_username(array(
+                    $studenti[$i]['nome'],
+                    $studenti[$i]['cognome'],
+                    $studenti[$i]['classe'],
+                    $studenti[$i]['sezione']
+                )); // Username dello studente per GiocoCalciando
+                $student_password = $this->account->generate_password(); // Password in chiaro
+                $studenti[$i]['password'] = md5($student_password); // La password criptata viene inserita nel db
+
+                $id_studente = $this->istituto_model->create_studente($studenti[$i]);
+
+                // Crea il collegamento tra lo studente e la candidatura
+                // inserendo un nuovo record nella tabella tab_studenti_candidature.
+                
+                $this->db->insert('tab_studenti_candidature', array(
+                    'id_studente' => $id_studente,
+                    'id_candidatura' => $id_candidatura
+                ));
+
+                // Aggiunge un elemento all'array $accounts,
+                // generando username e password.
+
+                $gc_accounts[$i]['username'] = $studenti[$i]['nickname'];
+                $gc_accounts[$i]['password'] = $student_password;
+                $gc_accounts[$i]['classe'] = $studenti[$i]['classe'];
+                $gc_accounts[$i]['sezione'] = $studenti[$i]['sezione'];
+            }
+
+            // Invia una mail al referente dell'istituto,
+            // specificando i dati di accesso per GiocoCalciando.
+
+            $this->_send_mail_giococalciando($this->session->istituto['email'], $gc_accounts);
+        }
+        if($this->input->post('rg'))
+        {
+            // Ricerca l'id della candidatura da inserire in tab_studenti_candidature
+            foreach($data['progetti'] as $progetto)
+            {
+                if($progetto['progetto'] === 'Ragazze in Gioco')
+                {
+                    $id_candidatura = $progetto['id_candidatura'];
+                    break;
+                }
+            }
+
+            $studenti = array();
+            for($i=0; $i<sizeof($this->input->post('rg_nome_studente[]')); $i++)
+            {
+                // Mappa tutti gli studenti per poterli inserire nel db.
+                $studenti[$i]['nome'] = $this->input->post('rg_nome_studente[]')[$i];
+                $studenti[$i]['cognome'] = $this->input->post('rg_cognome_studente[]')[$i];
+                $studenti[$i]['data_nascita'] = $this->date->to_mysql_date($this->input->post('rg_data_nascita[]')[$i]);
+                $studenti[$i]['sesso'] = $this->input->post('rg_sesso_studente[]')[$i];
+                $studenti[$i]['classe'] = $this->input->post('rg_classe[]')[$i];
+                $studenti[$i]['sezione'] = $this->input->post('rg_sezione[]')[$i];
+                $studenti[$i]['id_istituto'] = $this->session->istituto['cod_meccanografico'];
+                $studenti[$i]['grado_istituto'] = 2;
+
+                $id_studente = $this->istituto_model->create_studente($studenti[$i]);
+
+                // Crea il collegamento tra lo studente e la candidatura
+                // inserendo un nuovo record nella tabella tab_studenti_candidature.
+                
+                $this->db->insert('tab_studenti_candidature', array(
+                    'id_studente' => $id_studente,
+                    'id_candidatura' => $id_candidatura
+                ));
+            }
+        }
+        if($this->input->post('col'))
+        {
+            // Ricerca l'id della candidatura da inserire in tab_classi_candidature
+            foreach($data['progetti'] as $progetto)
+            {
+                if($progetto['progetto'] === 'Il Calcio e le Ore di Lezione')
+                {
+                    $id_candidatura = $progetto['id_candidatura'];
+                    break;
+                }
+            }
+
+            // Inserimento Classi partecipanti al progetto
+            $classi = array();
+            for($i=0; $i<sizeof($this->input->post('col_classe[]')); $i++)
+            {
+                $classi[$i]['classe'] = $this->input->post('col_classe[]')[$i];
+                $classi[$i]['sezione'] = $this->input->post('col_sezione[]')[$i];
+                $classi[$i]['n_studenti'] = $this->input->post('col_n_studenti[]')[$i];
+                $classi[$i]['id_istituto'] = $this->session->istituto['cod_meccanografico'];
+                $classi[$i]['grado_istituto'] = $this->session->istituto['grado_istituto'];
+
+                $id_classe = $this->istituto_model->create_classe($classi[$i]);
+
+                // Crea il collegamento tra la classe e la candidatura
+                // inserendo un nuovo record nella tabella tab_classi_candidature.
+                
+                $this->db->insert('tab_classi_candidature', array(
+                    'id_classe' => $id_classe,
+                    'id_candidatura' => $id_candidatura
+                ));
+            }
+        }
+        if($this->input->post('cs'))
+        {
+            // Ricerca l'id della candidatura da inserire in tab_studenti_candidature
+            foreach($data['progetti'] as $progetto)
+            {
+                if($progetto['progetto'] === 'Campionati Studenteschi')
+                {
+                    $id_candidatura = $progetto['id_candidatura'];
+                    break;
+                }
+            }
+
+            // Inserimento Studenti Campionati Studenteschi
+            $studenti = array();
+            for($i=0; $i<sizeof($this->input->post('cs_nome_studente[]')); $i++)
+            {
+                // Mappa tutti gli studenti per poterli inserire nel db.
+                $studenti[$i]['nome'] = $this->input->post('cs_nome_studente[]')[$i];
+                $studenti[$i]['cognome'] = $this->input->post('cs_cognome_studente[]')[$i];
+                $studenti[$i]['data_nascita'] = $this->date->to_mysql_date($this->input->post('cs_data_nascita[]')[$i]);
+                $studenti[$i]['sesso'] = $this->input->post('cs_sesso_studente[]')[$i];
+                $studenti[$i]['classe'] = $this->input->post('cs_classe[]')[$i];
+                $studenti[$i]['sezione'] = $this->input->post('cs_sezione[]')[$i];
+                $studenti[$i]['id_istituto'] = $this->session->istituto['cod_meccanografico'];
+                $studenti[$i]['grado_istituto'] = $this->session->istituto['grado_istituto'];
+
+                $id_studente = $this->istituto_model->create_studente($studenti[$i]);
+
+                // Crea il collegamento tra lo studente e la candidatura
+                // inserendo un nuovo record nella tabella tab_studenti_candidature.
+                
+                $this->db->insert('tab_studenti_candidature', array(
+                    'id_studente' => $id_studente,
+                    'id_candidatura' => $id_candidatura,
+                    'tipo_campionato' => $this->input->post('cs_tipo_campionato[]')[$i]
+                ));
+            }
+        }
+
+        // Ricarica la pagina con un messaggio che comunica
+        // l'esito dell'operazione.
+        
+        $data['insert_success'] = TRUE;
+        
+        $this->load->view('header', $data);
+        $this->load->view('menu', $data);
+        $this->load->view('istituto/add_subscriptions', $data);
+        $this->load->view('footer');
+    }
+
+    // Ritorna TRUE o FALSE a seconda della correttezza
+    // dei dati all'interno della form.
+
+    private function form_validation_add_subscriptions()
+    {
+        $this->load->library('form_validation');
+        $this->load->helper('form');
+
+        // Poichè, al caricamento della pagina dei progetti,
+        // non è visibile alcun form, le regole di validazione
+        // vengono applicate in base ai progetti scelti in precedenza.
+        // gc  = GiocoCalciando
+        // rg  = Ragazze in Gioco
+        // col = Il Calcio e le Ore di Lezione
+        // cs  = Campionati Studenteschi
+        
+        if($this->input->post('gc'))
+        {
+            $this->form_validation->set_rules('gc_nome_studente[]', 'GiocoCalciando - Nome Studente', 'required');
+            $this->form_validation->set_rules('gc_cognome_studente[]', 'GiocoCalciando - Cognome Studente', 'required');
+            $this->form_validation->set_rules('gc_sesso_studente[]', 'GiocoCalciando - Sesso Studente', 'required');
+            $this->form_validation->set_rules('gc_classe[]', 'GiocoCalciando - Classe', 'required');
+            $this->form_validation->set_rules('gc_sezione[]', 'GiocoCalciando - Sezione', 'required');
+            $this->form_validation->set_rules('gc_data_nascita[]', 'GiocoCalciando - Data di Nascita', 'required');
+        }
+        if($this->input->post('rg'))
+        {
+            $this->form_validation->set_rules('rg_nome_studente[]', 'Ragazze In Gioco - Nome Studente', 'required');
+            $this->form_validation->set_rules('rg_cognome_studente[]', 'Ragazze In Gioco - Cognome Studente', 'required');
+            $this->form_validation->set_rules('rg_classe[]', 'Ragazze In Gioco - Classe', 'required');
+            $this->form_validation->set_rules('rg_sezione[]', 'Ragazze In Gioco - Sezione', 'required');
+            $this->form_validation->set_rules('rg_data_nascita[]', 'Ragazze in Gioco - Data di Nascita', 'required');
+        }
+        if($this->input->post('cs'))
+        {
+            $this->form_validation->set_rules('cs_nome_studente[]', 'Campionati Studenteschi - Nome Studente', 'required');
+            $this->form_validation->set_rules('cs_cognome_studente[]', 'Campionati Studenteschi - Cognome Studente', 'required');
+            $this->form_validation->set_rules('cs_sesso_studente[]', 'Campionati Studenteschi - Sesso Studente', 'required');
+            $this->form_validation->set_rules('cs_classe[]', 'Campionati Studenteschi - Classe', 'required');
+            $this->form_validation->set_rules('cs_sezione[]', 'Campionati Studenteschi - Sezione', 'required');
+            $this->form_validation->set_rules('cs_data_nascita[]', 'Campionati Studenteschi - Data di Nascita', 'required');
+            $this->form_validation->set_rules('cs_tipo_campionato[]', 'Campionati Studenteschi - Campionato', 'required');
+        }
+        if($this->input->post('col'))
+        {
+            $this->form_validation->set_rules('col_classe[]', 'Il Calcio e le Ore di Lezione - Classe', 'required');
+            $this->form_validation->set_rules('col_sezione[]', 'Il Calcio e le Ore di Lezione - Sezione', 'required');
+            $this->form_validation->set_rules('col_n_studenti[]', 'Il Calcio e le Ore di Lezione - N°Studenti', 'required');
+        }
+
+        return $this->form_validation->run();
     }
 }
